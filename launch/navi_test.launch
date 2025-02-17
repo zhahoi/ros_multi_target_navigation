@@ -1,0 +1,5 @@
+<launch>
+   <node name="navi_test" pkg="navigation_test" type="navigation_test_node" output="screen" respawn="true">
+      <rosparam file="$(find navigation_test)/config/config.yaml" command="load" />
+   </node>
+</launch>
