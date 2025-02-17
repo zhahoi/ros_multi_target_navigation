@@ -1,0 +1,2 @@
+# ros_multi_target_navigation
+使用ros+movebase进行多目标点巡航
