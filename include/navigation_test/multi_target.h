@@ -10,8 +10,6 @@
 #include <XmlRpcValue.h>
 #include <memory>
 
-#define LOOP_NAVIGATION   // 用于判定是否循环执行目标点的标志
-
 namespace robot_ctrl {
     typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
     
