@@ -56,6 +56,8 @@ namespace robot_ctrl {
         int index_current_ = 0;
         bool completed_ = false;
         bool threshold_reached_ = false;
+
+        bool loop_navigation_;  // 新增的变量，用于控制是否循环目标点
     };
 }
 #endif

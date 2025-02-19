@@ -10,3 +10,5 @@ position_tolerance: 0.3 # 位置误差容忍阈值（米）
 
 angle_tolerance_deg: 15.0 # 角度误差容忍阈值（度）
 
+loop_navigation: true  # 设置为true启用循环导航，设置为false禁用循环
+

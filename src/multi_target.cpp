@@ -39,6 +39,9 @@ namespace robot_ctrl {
         param_n.param("position_tolerance", position_tolerance_, 0.3);  // 位置阈值，单位：米
         param_n.param("angle_tolerance_deg", angle_tolerance_deg_, 15.0);      // 角度阈值，单位：度
         angle_tolerance_ = angle_tolerance_deg_ * M_PI / 180.0;   // 转换为弧度
+
+        // 读取是否启用循环的参数
+        param_n.param("loop_navigation", loop_navigation_, false);  // 默认为false，若yaml中设置为true则启用循环
         
         // 初始化MoveBaseClient
         ac_ = new MoveBaseClient("move_base", true);
@@ -57,15 +60,13 @@ namespace robot_ctrl {
 
         // 如果目标点被取消、完成或者失败，进行下一步导航
         if (navi_status_ == CANCEL_NAVI || navi_status_ == NAVI_SUCCESS || navi_status_ == NAVI_FAILED) { 
-
-#ifndef LOOP_NAVIGATION
-            // 如果所有目标点都已经到达，则停止
-            if (index_current_ >= pose_number_) {
+            // 使用loop_navigation控制是否启用循环
+            if (!loop_navigation_ && index_current_ >= pose_number_) {
                 completed_ = true;  // 只有当所有目标点都到达后才设置完成
                 ROS_INFO("All targets reached. Stopping navigation.");
                 return;
             }
-#endif
+
             // 获取当前目标点
             geometry_msgs::Pose2D goal_pose = goal_pose_list_[index_current_];
             int status = setGoal(goal_pose); // 设置当前目标
@@ -80,11 +81,12 @@ namespace robot_ctrl {
             ROS_WARN("Goal %d timeout! Skipping to next target.", index_current_);
             // 超时跳过当前目标点
             navi_status_ = NAVI_FAILED;
-#ifdef LOOP_NAVIGATION
-            index_current_ = (index_current_ + 1) % pose_number_;  // 跳到下一个目标点（循环）
-#else
-            index_current_++;  // 跳到下一个目标点
-#endif
+            if (loop_navigation_) {
+                // 如果启用循环，则循环目标点
+                index_current_ = (index_current_ + 1) % pose_number_;  
+            } else {
+                index_current_++;  // 否则跳到下一个目标点
+            }
             last_goal_time_ = ros::Time::now();  // 更新最后目标时间
         }
     }
@@ -120,20 +122,20 @@ namespace robot_ctrl {
         if (state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED || threshold_reached_) {
             ROS_INFO("Navigation success!");
             navi_status_ = NAVI_SUCCESS;
-#ifdef LOOP_NAVIGATION
-            index_current_ = (index_current_ + 1) % pose_number_;  // 跳到下一个目标点（循环）
-#else
-            index_current_++;  // 跳到下一个目标点
-#endif
+            if (loop_navigation_) {
+                index_current_ = (index_current_ + 1) % pose_number_;  // 跳到下一个目标点（循环）
+            } else {
+                index_current_++;  // 跳到下一个目标点
+            }
             threshold_reached_ = false; // 重置标志
         } else {
             ROS_WARN("Navigation failed! State: %s", state.toString().c_str());
             navi_status_ = NAVI_FAILED;
-#ifdef LOOP_NAVIGATION
-            index_current_ = (index_current_ + 1) % pose_number_;  // 失败仍继续（循环）
-#else
-            index_current_++;  // 失败仍继续（可根据需求修改）
-#endif
+            if (loop_navigation_) {
+                index_current_ = (index_current_ + 1) % pose_number_;  // 失败仍继续（循环）
+            } else {
+                index_current_++;  // 失败仍继续（可根据需求修改）
+            }
         }
         last_goal_time_ = ros::Time::now();
     }
