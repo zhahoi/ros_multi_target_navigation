@@ -64,6 +64,7 @@ angle_tolerance_deg: 15.0 # 角度误差容忍阈值（度）
 $ cd ~/catkin_ws/src
 $ git clone https://github.com/zhahoi/ros_multi_target_navigation.git
 $ cd ..
+$ catkin_make
 $ source devel/setup.bash
 $ roslaunch navigation_test navi_test.launch
 ```
